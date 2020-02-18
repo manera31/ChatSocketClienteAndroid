@@ -1,6 +1,8 @@
 package com.joanmanera.chatsocket;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -17,11 +19,15 @@ import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText etNick, etIP, etMensaje;
     private Button bEnviar;
+    private RecyclerView recyclerView;
+    private AdapterMensaje adapterMensaje;
+    private ArrayList<Mensaje> mensajes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,26 +41,25 @@ public class MainActivity extends AppCompatActivity {
         bEnviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Cliente tarea = new Cliente(MainActivity.this);
+                Cliente tarea = new Cliente();
                 tarea.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
                 //tarea.execute(etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
             }
         });
 
-        RecibirMensaje recibirMensaje = new RecibirMensaje(MainActivity.this);
+        RecibirMensaje recibirMensaje = new RecibirMensaje();
         recibirMensaje.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        mensajes = new ArrayList<>();
+        adapterMensaje = new AdapterMensaje(mensajes);
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setAdapter(adapterMensaje);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
     }
 
-    private static class Cliente extends AsyncTask<String, String, Boolean>{
+    private class Cliente extends AsyncTask<String, Mensaje, Boolean>{
 
-        private TextView tvTexto;
-
-
-        public Cliente(MainActivity context){
-            tvTexto = context.findViewById(R.id.tvTexto);
-
-        }
 
         @Override
         protected void onPreExecute() {
@@ -71,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                 objectOutputStream.writeObject(mensaje);
 
-                publishProgress(mensaje.getMensaje());
+                publishProgress(mensaje);
 
                 objectOutputStream.close();
                 socket.close();
@@ -83,20 +88,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(String... values) {
+        protected void onProgressUpdate(Mensaje... values) {
             super.onProgressUpdate(values);
 
-            tvTexto.append( values[0] + "\n");
+            adapterMensaje.addMensaje(values[0]);
         }
     }
 
-    private class RecibirMensaje extends AsyncTask<Void, String, Boolean>{
+    private class RecibirMensaje extends AsyncTask<Void, Mensaje, Boolean>{
 
-        private TextView tvTexto;
-
-        public RecibirMensaje(MainActivity context) {
-            tvTexto = context.findViewById(R.id.tvTexto);
-        }
 
         @Override
         protected void onPreExecute() {
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                     Mensaje mensaje = (Mensaje) objectInputStream.readObject();
 
-                    publishProgress(mensaje.getMensaje());
+                    publishProgress(mensaje);
                 }
             } catch (Exception e){
                 e.printStackTrace();
@@ -123,9 +123,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(String... values) {
+        protected void onProgressUpdate(Mensaje... values) {
             super.onProgressUpdate(values);
-            tvTexto.append( values[0] + "\n");
+            adapterMensaje.addMensaje(values[0]);
         }
     }
 }
