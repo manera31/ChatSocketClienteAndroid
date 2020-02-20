@@ -6,8 +6,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.format.Formatter;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,36 +25,51 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements MensajePrivadoDialogo.IIPListener {
 
+    private final String IP_SERVIDOR = "192.168.1.71";
     private EditText etNick, etMensaje;
     private Button bEnviar, bEnviarMensajePrivado;
+    private TextView tvDestino;
     private RecyclerView recyclerView;
     private AdapterMensaje adapterMensaje;
     private ArrayList<Mensaje> mensajes;
     private String ipDestino;
+    private boolean isPrivate;
+    private MensajePrivadoDialogo dialogo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Start tarea1 = new Start();
+        tarea1.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         bEnviarMensajePrivado = findViewById(R.id.bMensajePrivado);
+        dialogo = new MensajePrivadoDialogo(this);
         bEnviarMensajePrivado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MensajePrivadoDialogo dialogo = new MensajePrivadoDialogo(MainActivity.this);
+                dialogo.show(getSupportFragmentManager(), "dialog");
             }
         });
 
+        tvDestino = findViewById(R.id.tvDestinatario);
         etNick = findViewById(R.id.etNick);
-        //etIP = findViewById(R.id.etIP);
         etMensaje = findViewById(R.id.etMensaje);
         bEnviar = findViewById(R.id.bEnviar);
         bEnviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Cliente tarea = new Cliente();
-                tarea.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, etNick.getText().toString(), ipDestino, etMensaje.getText().toString());
-                //tarea.execute(etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
+                Mensaje m;
+                if(isPrivate){
+                    m = new Mensaje(etNick.getText().toString(), ipDestino, etMensaje.getText().toString(), isPrivate);
+                    isPrivate = false;
+                    tvDestino.setText("All");
+                } else {
+                    m = new Mensaje(etNick.getText().toString(), "", etMensaje.getText().toString(), isPrivate);
+                }
+                tarea.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, m);
             }
         });
 
@@ -65,14 +82,18 @@ public class MainActivity extends AppCompatActivity implements MensajePrivadoDia
         recyclerView.setAdapter(adapterMensaje);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        setTitle(Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress()));
     }
 
     @Override
     public void onIpSelected(String ip) {
         ipDestino = ip;
+        isPrivate = true;
+        tvDestino.setText(ip);
     }
 
-    private class Cliente extends AsyncTask<String, Mensaje, Boolean>{
+    private class Cliente extends AsyncTask<Mensaje, Mensaje, Boolean>{
 
 
         @Override
@@ -82,15 +103,13 @@ public class MainActivity extends AppCompatActivity implements MensajePrivadoDia
         }
 
         @Override
-        protected Boolean doInBackground(String... strings) {
+        protected Boolean doInBackground(Mensaje... mensajes) {
             try {
-                Socket socket = new Socket("192.168.21.210", 9990);
-                //Mensaje mensaje = new Mensaje(etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
-                Mensaje mensaje = new Mensaje(strings[0], strings[1], strings[2]);
+                Socket socket = new Socket( IP_SERVIDOR, 9990);
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                objectOutputStream.writeObject(mensaje);
+                objectOutputStream.writeObject(mensajes[0]);
 
-                publishProgress(mensaje);
+                publishProgress(mensajes[0]);
 
                 objectOutputStream.close();
                 socket.close();
@@ -105,7 +124,9 @@ public class MainActivity extends AppCompatActivity implements MensajePrivadoDia
         protected void onProgressUpdate(Mensaje... values) {
             super.onProgressUpdate(values);
 
-            adapterMensaje.addMensaje(values[0]);
+            if (values[0].isPrivate()) {
+                adapterMensaje.addMensaje(values[0]);
+            }
         }
     }
 
@@ -140,6 +161,23 @@ public class MainActivity extends AppCompatActivity implements MensajePrivadoDia
         protected void onProgressUpdate(Mensaje... values) {
             super.onProgressUpdate(values);
             adapterMensaje.addMensaje(values[0]);
+        }
+    }
+
+    private class Start extends AsyncTask<Void, Void, Boolean>{
+
+
+        @Override
+        protected Boolean doInBackground(Void... mensajes) {
+            try {
+                Socket socket = new Socket(IP_SERVIDOR, 9990);
+
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            return true;
         }
     }
 }

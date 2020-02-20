@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import androidx.fragment.app.DialogFragment;
 public class MensajePrivadoDialogo extends DialogFragment {
 
     private IIPListener listener;
+    private EditText etIP;
 
     public MensajePrivadoDialogo(IIPListener listener){
         this.listener = listener;
@@ -24,12 +26,15 @@ public class MensajePrivadoDialogo extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
 
-        final EditText etIP = getActivity().findViewById(R.id.etIP);
+
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        builder.setView(inflater.inflate(R.layout.destino_mensaje_dialogo, null))
+        final View view = inflater.inflate(R.layout.destino_mensaje_dialogo, null);
+        etIP = view.findViewById(R.id.etIP);
+
+        builder.setView(view)
                 .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

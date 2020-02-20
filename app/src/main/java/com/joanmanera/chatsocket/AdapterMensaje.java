@@ -1,5 +1,6 @@
 package com.joanmanera.chatsocket;
 
+import android.graphics.Typeface;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -54,8 +55,16 @@ public class AdapterMensaje extends RecyclerView.Adapter<AdapterMensaje.MensajeH
         public void bindMensaje(int position){
             Mensaje mensaje = mensajes.get(position);
 
-            tvDe.setText(mensaje.getDe() + ": ");
-            tvMensaje.setText(mensaje.getMensaje());
+            if (mensaje.isPrivate()){
+                tvDe.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD_ITALIC), Typeface.BOLD_ITALIC);
+                tvDe.setText(mensaje.getDe() + ": ");
+                tvMensaje.setText(mensaje.getMensaje());
+            } else {
+                tvDe.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL), Typeface.NORMAL);
+                tvDe.setText(mensaje.getDe() + ": ");
+                tvMensaje.setText(mensaje.getMensaje());
+            }
+
         }
     }
 
