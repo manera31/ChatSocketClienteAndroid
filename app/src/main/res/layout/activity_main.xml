@@ -13,6 +13,7 @@
         android:layout_height="match_parent"
         android:layout_margin="10dp"
         android:layout_weight="5"
+        android:minHeight="100dp"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -33,29 +34,17 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="Nick"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:text="joan" />
         </LinearLayout>
 
-        <LinearLayout
+        <Button
+            android:id="@+id/bMensajePrivado"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="horizontal">
+            android:text="mensaje privado" />
 
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="IP: " />
-
-            <EditText
-                android:id="@+id/etIP"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:hint="IP"
-                android:inputType="textPersonName" />
-        </LinearLayout>
     </LinearLayout>
 
 
@@ -72,6 +61,7 @@
         android:layout_height="match_parent"
         android:layout_margin="10dp"
         android:layout_weight="5"
+        android:minHeight="100dp"
         android:orientation="horizontal">
 
         <EditText
@@ -82,6 +72,7 @@
             android:ems="10"
             android:hint="Escribe un mensaje"
             android:inputType="textPersonName"
+            android:text="eo"
             tools:ignore="NestedWeights" />
 
         <Button

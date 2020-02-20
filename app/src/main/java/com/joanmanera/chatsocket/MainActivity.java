@@ -21,28 +21,37 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MensajePrivadoDialogo.IIPListener {
 
-    private EditText etNick, etIP, etMensaje;
-    private Button bEnviar;
+    private EditText etNick, etMensaje;
+    private Button bEnviar, bEnviarMensajePrivado;
     private RecyclerView recyclerView;
     private AdapterMensaje adapterMensaje;
     private ArrayList<Mensaje> mensajes;
+    private String ipDestino;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        bEnviarMensajePrivado = findViewById(R.id.bMensajePrivado);
+        bEnviarMensajePrivado.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MensajePrivadoDialogo dialogo = new MensajePrivadoDialogo(MainActivity.this);
+            }
+        });
+
         etNick = findViewById(R.id.etNick);
-        etIP = findViewById(R.id.etIP);
+        //etIP = findViewById(R.id.etIP);
         etMensaje = findViewById(R.id.etMensaje);
         bEnviar = findViewById(R.id.bEnviar);
         bEnviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Cliente tarea = new Cliente();
-                tarea.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
+                tarea.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, etNick.getText().toString(), ipDestino, etMensaje.getText().toString());
                 //tarea.execute(etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
             }
         });
@@ -58,6 +67,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onIpSelected(String ip) {
+        ipDestino = ip;
+    }
+
     private class Cliente extends AsyncTask<String, Mensaje, Boolean>{
 
 
@@ -70,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(String... strings) {
             try {
-                Socket socket = new Socket("192.168.1.71", 9990);
+                Socket socket = new Socket("192.168.21.210", 9990);
                 //Mensaje mensaje = new Mensaje(etNick.getText().toString(), etIP.getText().toString(), etMensaje.getText().toString());
                 Mensaje mensaje = new Mensaje(strings[0], strings[1], strings[2]);
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());

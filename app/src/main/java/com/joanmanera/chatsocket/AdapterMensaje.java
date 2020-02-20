@@ -1,5 +1,6 @@
 package com.joanmanera.chatsocket;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,11 +34,6 @@ public class AdapterMensaje extends RecyclerView.Adapter<AdapterMensaje.MensajeH
     @Override
     public int getItemCount() {
         return mensajes.size();
-    }
-
-    public void setMensajes(ArrayList<Mensaje> mensajes){
-        this.mensajes = mensajes;
-        notifyDataSetChanged();
     }
 
     public void addMensaje(Mensaje m){
